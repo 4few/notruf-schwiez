@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Küstenwache: Einsatz 112</title>
+  <title>Einsatzkommando 112 - Advanced</title>
   <style>
     :root {
       --navy: #071725;
@@ -11,6 +11,7 @@
       --blue: #63c8ff;
       --orange: #ffad3d;
       --red: #e43e3e;
+      --green: #2ecc71;
     }
 
     * { box-sizing: border-box; }
@@ -59,6 +60,7 @@
     .orange { color: var(--orange); font-weight: bold; }
     .red { color: #ff7474; font-weight: bold; }
     .blue { color: var(--blue); font-weight: bold; }
+    .green { color: var(--green); font-weight: bold; }
 
     #hint {
       position: fixed;
@@ -103,6 +105,7 @@
     button {
       padding: 13px 22px;
       margin-top: 15px;
+      margin-right: 8px;
       border: 0;
       border-radius: 10px;
       cursor: pointer;
@@ -113,8 +116,21 @@
     }
 
     button:hover { background: #f45252; }
+    button.secondary { background: #398ac3; }
+    button.secondary:hover { background: #4fa3d1; }
 
     #success { display: none; }
+    #mainMenu { display: none; }
+    #missionSelect { display: none; }
+    #difficultySelect { display: none; }
+    #vehicleSelect { display: none; }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 15px;
+    }
 
     @media (max-width: 650px) {
       #hud {
@@ -132,68 +148,124 @@
       #hud .panel:last-child {
         text-align: right;
       }
+
+      .grid {
+        grid-template-columns: 1fr;
+      }
     }
   </style>
 </head>
 
 <body>
-  <div id="startScreen" class="overlay">
+  <div id="mainMenu" class="overlay">
     <div class="card">
-      <h2>🚒 Küstenwache: Einsatz 112</h2>
-      <p>Willkommen bei der Feuerwehr Nordhafen.</p>
-      <p>Ein Gebäudebrand wurde in der Hafenstraße gemeldet. Fahre zum Einsatzort und lösche das Feuer.</p>
-      <hr style="border-color:#28506d; margin:18px 0;">
-      <p><b>Steuerung</b></p>
-      <p>W / S = Gas & Rückwärts</p>
-      <p>A / D = Lenken</p>
-      <p>F = Blaulicht &nbsp;|&nbsp; H = Sirene</p>
-      <p>E gedrückt halten = Löschen</p>
-      <p>R = Zur Feuerwache zurücksetzen</p>
-      <button id="startButton">DIENST BEGINNEN</button>
+      <h2>🚒 EINSATZKOMMANDO 112</h2>
+      <p>Willkommen zur erweiterten Version!</p>
+      <p>Übernimm Einsätze als Feuerwehr, Rettung oder Polizei.</p>
+      <button onclick="showMissionSelect()">EINSATZ STARTEN</button>
+      <button class="secondary" onclick="showStatistics()">STATISTIKEN</button>
+    </div>
+  </div>
+
+  <div id="missionSelect" class="overlay">
+    <div class="card">
+      <h2>🗺️ EINSATZORT WÄHLEN</h2>
+      <div class="grid">
+        <button onclick="selectMission(0)">🔥 Gebäudebrand<br>Hafenstraße</button>
+        <button onclick="selectMission(1)">🚗 Autounfall<br>Hauptstraße</button>
+        <button onclick="selectMission(2)">🌊 Person im Wasser<br>Hafen</button>
+        <button onclick="selectMission(3)">💣 Chemieunfall<br>Industriegebiet</button>
+      </div>
+      <button class="secondary" onclick="showMainMenu()">ZURÜCK</button>
+    </div>
+  </div>
+
+  <div id="difficultySelect" class="overlay">
+    <div class="card">
+      <h2>⚙️ SCHWIERIGKEITSGRAD</h2>
+      <div class="grid">
+        <button onclick="selectDifficulty('easy')" style="background: #2ecc71;">⭐ EINFACH</button>
+        <button onclick="selectDifficulty('normal')" style="background: #f39c12;">⭐⭐ NORMAL</button>
+        <button onclick="selectDifficulty('hard')" style="background: #e74c3c;">⭐⭐⭐ SCHWER</button>
+      </div>
+      <button class="secondary" onclick="showMissionSelect()">ZURÜCK</button>
+    </div>
+  </div>
+
+  <div id="vehicleSelect" class="overlay">
+    <div class="card">
+      <h2>🚙 FAHRZEUG WÄHLEN</h2>
+      <div class="grid">
+        <button onclick="selectVehicle('fire')" style="background: #c71f2a;">🚒 Feuerwehr</button>
+        <button onclick="selectVehicle('ambulance')" style="background: #ffffff; color: #333;">🚑 Rettung</button>
+        <button onclick="selectVehicle('police')" style="background: #0051ba;">🚔 Polizei</button>
+      </div>
+      <button class="secondary" onclick="showDifficultySelect()">ZURÜCK</button>
     </div>
   </div>
 
   <div id="success" class="overlay">
     <div class="card">
-      <h2>✅ Einsatz erfolgreich!</h2>
-      <p>Der Brand wurde gelöscht und das Gebäude gesichert.</p>
-      <p class="orange">+250 Credits · +100 Erfahrung</p>
-      <button onclick="location.reload()">NÄCHSTEN EINSATZ STARTEN</button>
+      <h2>✅ EINSATZ ERFOLGREICH!</h2>
+      <p id="successMessage">Der Einsatz wurde erfolgreich abgeschlossen.</p>
+      <p class="green" id="successReward">+250 Credits · +100 Erfahrung</p>
+      <button onclick="showMissionSelect()">NÄCHSTER EINSATZ</button>
+      <button class="secondary" onclick="showMainMenu()">HAUPTMENÜ</button>
     </div>
   </div>
 
   <div id="hud">
     <div class="panel">
-      <h1>LEITSTELLE NORDHAFEN</h1>
-      <p><span class="orange">Einsatz:</span> Gebäudebrand, Hafenstraße</p>
+      <h1 id="hudTitle">LEITSTELLE</h1>
+      <p id="hudMission">Einsatz: --</p>
       <p id="distance">Entfernung: -- m</p>
       <p id="vehicleStatus">Blaulicht: AUS · Sirene: AUS</p>
+      <p id="weatherInfo">Wetter: Sonnig</p>
     </div>
 
     <div class="panel">
       <p>💰 Credits: <b id="credits">0</b></p>
       <p>⭐ Erfahrung: <b id="xp">0</b></p>
       <p>🚒 Tempo: <b id="speed">0</b> km/h</p>
+      <p>🌙 Zeit: <b id="timeOfDay">Tag</b></p>
     </div>
   </div>
 
-  <div id="hint">Drücke „Dienst beginnen".</div>
+  <div id="hint">Drücke „Einsatz starten".</div>
 
   <script type="module">
     import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js";
 
-    // Grundsetup
+    // Game State
+    const gameState = {
+      started: false,
+      mission: 0,
+      difficulty: 'normal',
+      vehicle: 'fire',
+      completed: false,
+      timeOfDay: 0,
+      weather: 'sunny'
+    };
+
+    // Mission Configs
+    const missions = [
+      { name: 'Gebäudebrand', location: 'Hafenstraße', target: new THREE.Vector3(94, 0, 36), type: 'fire', time: 120 },
+      { name: 'Autounfall', location: 'Hauptstraße', target: new THREE.Vector3(34, 0, -40), type: 'crash', time: 90 },
+      { name: 'Person im Wasser', location: 'Hafen', target: new THREE.Vector3(-140, 0, 20), type: 'rescue', time: 150 },
+      { name: 'Chemieunfall', location: 'Industriegebiet', target: new THREE.Vector3(120, 0, 100), type: 'hazmat', time: 180 }
+    ];
+
+    // Persisted Data
+    let credits = Number(localStorage.getItem("gameCredits") || 0);
+    let xp = Number(localStorage.getItem("gameXP") || 0);
+    let completedMissions = Number(localStorage.getItem("completedMissions") || 0);
+
+    // Scene Setup
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0x91cae7);
     scene.fog = new THREE.Fog(0x91cae7, 80, 290);
 
-    const camera = new THREE.PerspectiveCamera(
-      65,
-      window.innerWidth / window.innerHeight,
-      0.1,
-      1000
-    );
-
+    const camera = new THREE.PerspectiveCamera(65, window.innerWidth / window.innerHeight, 0.1, 1000);
     const renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
@@ -202,36 +274,59 @@
 
     const clock = new THREE.Clock();
     const keys = {};
+    let speed = 0, steering = 0, blueLights = false, siren = false, extinguishing = false;
 
-    let gameStarted = false;
-    let speed = 0;
-    let steering = 0;
-    let blueLights = false;
-    let siren = false;
-    let extinguishing = false;
-    let completed = false;
+    // UI Functions
+    function showMainMenu() {
+      document.querySelector("#mainMenu").style.display = "flex";
+      document.querySelector("#missionSelect").style.display = "none";
+      document.querySelector("#difficultySelect").style.display = "none";
+      document.querySelector("#vehicleSelect").style.display = "none";
+    }
 
-    const firePosition = new THREE.Vector3(94, 0, 36);
+    function showMissionSelect() {
+      document.querySelector("#mainMenu").style.display = "none";
+      document.querySelector("#missionSelect").style.display = "flex";
+    }
 
-    // Spieler-Fortschritt
-    let credits = Number(localStorage.getItem("nordhafenCredits") || 0);
-    let xp = Number(localStorage.getItem("nordhafenXP") || 0);
+    function selectMission(id) {
+      gameState.mission = id;
+      document.querySelector("#missionSelect").style.display = "none";
+      document.querySelector("#difficultySelect").style.display = "flex";
+    }
 
-    document.querySelector("#credits").textContent = credits;
-    document.querySelector("#xp").textContent = xp;
+    function showDifficultySelect() {
+      document.querySelector("#difficultySelect").style.display = "flex";
+    }
 
-    // Licht
-    scene.add(new THREE.HemisphereLight(0xdaf4ff, 0x416940, 2.3));
+    function selectDifficulty(diff) {
+      gameState.difficulty = diff;
+      document.querySelector("#difficultySelect").style.display = "none";
+      document.querySelector("#vehicleSelect").style.display = "flex";
+    }
 
-    const sun = new THREE.DirectionalLight(0xfff0c9, 2.5);
-    sun.position.set(60, 100, 45);
-    sun.castShadow = true;
-    scene.add(sun);
+    function selectVehicle(veh) {
+      gameState.vehicle = veh;
+      startGame();
+    }
 
+    function showStatistics() {
+      alert(`📊 STATISTIKEN\n\nCredits: ${credits}\nErfahrung: ${xp}\nAbgeschlossene Einsätze: ${completedMissions}`);
+    }
+
+    window.showMainMenu = showMainMenu;
+    window.showMissionSelect = showMissionSelect;
+    window.selectMission = selectMission;
+    window.selectDifficulty = selectDifficulty;
+    window.selectVehicle = selectVehicle;
+    window.showStatistics = showStatistics;
+    window.showDifficultySelect = showDifficultySelect;
+
+    // Create World
     function createBox(width, height, depth, color, x, y, z) {
       const mesh = new THREE.Mesh(
         new THREE.BoxGeometry(width, height, depth),
-        new THREE.MeshStandardMaterial({ color })
+        new THREE.MeshStandardMaterial({ color, roughness: 0.7 })
       );
       mesh.position.set(x, y, z);
       mesh.castShadow = true;
@@ -240,33 +335,37 @@
       return mesh;
     }
 
-    // Boden und Wasser
-    createBox(420, 1, 420, 0x51934d, 0, -0.5, 0);
+    // Lighting
+    scene.add(new THREE.HemisphereLight(0xdaf4ff, 0x416940, 2.3));
+    const sun = new THREE.DirectionalLight(0xfff0c9, 2.5);
+    sun.position.set(60, 100, 45);
+    sun.castShadow = true;
+    scene.add(sun);
 
+    // Ground
+    createBox(420, 1, 420, 0x51934d, 0, -0.5, 0);
     const water = createBox(125, 0.2, 420, 0x288caf, -145, -0.15, 0);
     water.material.roughness = 0.15;
     water.material.metalness = 0.25;
 
-    // Straßen
+    // Roads
     const roadColor = 0x30363d;
     createBox(315, 0.12, 18, roadColor, 34, 0.06, 0);
     createBox(18, 0.12, 270, roadColor, 34, 0.06, 0);
     createBox(190, 0.12, 15, roadColor, 35, 0.06, 68);
 
-    // Fahrbahnmarkierungen
+    // Road markings
     for (let x = -105; x < 180; x += 14) {
       createBox(7, 0.03, 0.35, 0xf4dc78, x, 0.14, 0);
     }
-
     for (let z = -120; z < 130; z += 14) {
       createBox(0.35, 0.03, 7, 0xf4dc78, 34, 0.14, z);
     }
 
-    // Gebäude
+    // Buildings
     function createBuilding(x, z, width, depth, height, color) {
       createBox(width, height, depth, color, x, height / 2, z);
       createBox(width + 0.5, 0.5, depth + 0.5, 0x3a4650, x, height + 0.25, z);
-
       for (let i = -width / 2 + 2; i < width / 2; i += 4) {
         createBox(1.2, 1.3, 0.08, 0xa9dce9, x + i, height * 0.58, z - depth / 2 - 0.05);
       }
@@ -278,27 +377,20 @@
     createBuilding(-3, 74, 29, 20, 18, 0xe3d9c9);
     createBuilding(93, 92, 38, 30, 29, 0xbda6a2);
     createBuilding(11, 118, 24, 23, 16, 0xd4e1df);
-
-    // Feuerwache
     createBuilding(4, -84, 46, 32, 15, 0xb82f31);
-    createBox(38, 9, 0.5, 0x202b35, 4, 5, -100.2);
 
-    for (let x = -9; x <= 17; x += 13) {
-      createBox(9, 7, 0.3, 0x5c6c75, x, 5, -100.5);
-    }
-
-    // Feuerwehrfahrzeug
+    // Vehicle Group
     const truck = new THREE.Group();
     scene.add(truck);
 
-    const redMaterial = new THREE.MeshStandardMaterial({
-      color: 0xc71f2a,
-      roughness: 0.45
-    });
+    const vehicleColors = {
+      fire: 0xc71f2a,
+      ambulance: 0xf2f2f2,
+      police: 0x0051ba
+    };
 
-    const whiteMaterial = new THREE.MeshStandardMaterial({
-      color: 0xf2f2f2
-    });
+    const redMaterial = new THREE.MeshStandardMaterial({ color: vehicleColors.fire, roughness: 0.45 });
+    const whiteMaterial = new THREE.MeshStandardMaterial({ color: 0xf2f2f2 });
 
     function truckBox(w, h, d, material, x, y, z) {
       const mesh = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), material);
@@ -311,26 +403,15 @@
 
     truckBox(4.1, 2.1, 8, redMaterial, 0, 1.7, 0);
     truckBox(4.05, 2.1, 2.8, whiteMaterial, 0, 3.15, -2.25);
-
-    const windshield = truckBox(
-      3.3,
-      1.1,
-      0.08,
-      new THREE.MeshStandardMaterial({ color: 0x244f61 }),
-      0,
-      3.25,
-      -3.68
-    );
+    truckBox(3.3, 1.1, 0.08, new THREE.MeshStandardMaterial({ color: 0x244f61 }), 0, 3.25, -3.68);
 
     const wheels = [];
-
     for (const x of [-2.15, 2.15]) {
       for (const z of [-2.5, 2.55]) {
         const wheel = new THREE.Mesh(
           new THREE.CylinderGeometry(0.75, 0.75, 0.5, 16),
           new THREE.MeshStandardMaterial({ color: 0x151515 })
         );
-
         wheel.rotation.z = Math.PI / 2;
         wheel.position.set(x, 0.78, z);
         wheel.castShadow = true;
@@ -351,47 +432,37 @@
 
     truck.position.set(4, 0, -68);
 
-    // Brand
+    // Fire Effect
     const fireGroup = new THREE.Group();
-    fireGroup.position.copy(firePosition);
-    scene.add(fireGroup);
-
     const fireMaterial = new THREE.MeshStandardMaterial({
       color: 0xff4b08,
       emissive: 0xff2200,
       emissiveIntensity: 2.2
     });
 
-    for (let i = 0; i < 14; i++) {
-      const flame = new THREE.Mesh(
-        new THREE.ConeGeometry(0.7 + Math.random() * 0.8, 2 + Math.random() * 3, 6),
-        fireMaterial
-      );
-
-      flame.position.set(
-        (Math.random() - 0.5) * 7,
-        1.4,
-        (Math.random() - 0.5) * 6
-      );
-
-      fireGroup.add(flame);
+    function addFire(x, y, z) {
+      for (let i = 0; i < 14; i++) {
+        const flame = new THREE.Mesh(
+          new THREE.ConeGeometry(0.7 + Math.random() * 0.8, 2 + Math.random() * 3, 6),
+          fireMaterial
+        );
+        flame.position.set(
+          (Math.random() - 0.5) * 7,
+          1.4,
+          (Math.random() - 0.5) * 6
+        );
+        fireGroup.add(flame);
+      }
     }
 
-    // Einsatzmarkierung
+    // Mission Marker
     const marker = new THREE.Mesh(
       new THREE.CylinderGeometry(1.8, 1.8, 0.2, 32),
-      new THREE.MeshBasicMaterial({
-        color: 0xff9500,
-        transparent: true,
-        opacity: 0.85
-      })
+      new THREE.MeshBasicMaterial({ color: 0xff9500, transparent: true, opacity: 0.85 })
     );
-
-    marker.position.copy(firePosition);
-    marker.position.y = 10;
     scene.add(marker);
 
-    // Wasserstrahl
+    // Water Jet
     const waterJet = new THREE.Line(
       new THREE.BufferGeometry().setFromPoints([
         new THREE.Vector3(0, 2.3, 3),
@@ -399,29 +470,18 @@
       ]),
       new THREE.LineBasicMaterial({ color: 0x7ae7ff })
     );
-
     waterJet.visible = false;
     truck.add(waterJet);
 
-    function resetTruck() {
-      truck.position.set(4, 0, -68);
-      truck.rotation.set(0, 0, 0);
-      speed = 0;
-      steering = 0;
-    }
-
-    // Eingaben
+    // Input
     window.addEventListener("keydown", (event) => {
       const key = event.key.toLowerCase();
       keys[key] = true;
-
       if (key === "f") blueLights = !blueLights;
       if (key === "h") siren = !siren;
-      if (key === "r") resetTruck();
-
-      if (key === "e" && !completed) {
-        const distance = truck.position.distanceTo(firePosition);
-
+      if (key === "r") truck.position.set(4, 0, -68);
+      if (key === "e" && !gameState.completed) {
+        const distance = truck.position.distanceTo(missions[gameState.mission].target);
         if (distance < 16) {
           extinguishing = true;
           waterJet.visible = true;
@@ -432,22 +492,35 @@
     window.addEventListener("keyup", (event) => {
       const key = event.key.toLowerCase();
       keys[key] = false;
-
       if (key === "e") {
         extinguishing = false;
         waterJet.visible = false;
       }
     });
 
-    document.querySelector("#startButton").addEventListener("click", () => {
-      gameStarted = true;
-      document.querySelector("#startScreen").style.display = "none";
-      document.querySelector("#hint").textContent =
-        "Fahre zur orangefarbenen Einsatzmarkierung.";
-    });
+    function startGame() {
+      gameState.started = true;
+      gameState.completed = false;
+      gameState.timeOfDay = Math.random() * 0.5;
+      gameState.weather = ['sunny', 'rainy', 'foggy'][Math.floor(Math.random() * 3)];
+      
+      fireGroup.clear();
+      addFire(0, 0, 0);
+      fireGroup.position.copy(missions[gameState.mission].target);
+      scene.add(fireGroup);
+
+      marker.position.copy(missions[gameState.mission].target);
+      marker.position.y = 10;
+
+      document.querySelector("#mainMenu").style.display = "none";
+      document.querySelector("#success").style.display = "none";
+      document.querySelector("#hint").textContent = "Fahre zum Einsatzort!";
+      document.querySelector("#hudTitle").textContent = missions[gameState.mission].name.toUpperCase();
+      document.querySelector("#hudMission").textContent = `Einsatz: ${missions[gameState.mission].location}`;
+    }
 
     function updateTruck(delta) {
-      if (!gameStarted || completed) return;
+      if (!gameState.started || gameState.completed) return;
 
       if (keys.w) speed += 18 * delta;
       if (keys.s) speed -= 22 * delta;
@@ -472,22 +545,27 @@
         wheel.rotation.x -= speed * delta * 1.8;
       });
 
-      beaconMaterial.emissiveIntensity =
-        blueLights && Math.sin(performance.now() * 0.02) > 0 ? 7 : 0;
+      beaconMaterial.emissiveIntensity = blueLights && Math.sin(performance.now() * 0.02) > 0 ? 7 : 0;
 
-      document.querySelector("#speed").textContent =
-        Math.round(Math.abs(speed) * 4);
-
+      document.querySelector("#speed").textContent = Math.round(Math.abs(speed) * 4);
       document.querySelector("#vehicleStatus").innerHTML =
-        `Blaulicht: <b class="${blueLights ? "blue" : ""}">${blueLights ? "AN" : "AUS"}</b> ·
-         Sirene: <b class="${siren ? "red" : ""}">${siren ? "AN" : "AUS"}</b>`;
+        `Blaulicht: <b class="${blueLights ? "blue" : ""}">${blueLights ? "AN" : "AUS"}</b> · Sirene: <b class="${siren ? "red" : ""}">${siren ? "AN" : "AUS"}</b>`;
     }
 
     function updateMission(delta, elapsed) {
-      const distance = truck.position.distanceTo(firePosition);
+      const distance = truck.position.distanceTo(missions[gameState.mission].target);
 
-      document.querySelector("#distance").textContent =
-        `Entfernung: ${Math.round(distance)} m`;
+      document.querySelector("#distance").textContent = `Entfernung: ${Math.round(distance)} m`;
+
+      // Update time of day
+      gameState.timeOfDay += delta * 0.05;
+      if (gameState.timeOfDay > 1) gameState.timeOfDay = 0;
+      
+      const isDaytime = gameState.timeOfDay < 0.7;
+      document.querySelector("#timeOfDay").textContent = isDaytime ? "Tag" : "Nacht";
+
+      // Weather display
+      document.querySelector("#weatherInfo").textContent = `Wetter: ${gameState.weather === 'sunny' ? '☀️ Sonnig' : gameState.weather === 'rainy' ? '🌧️ Regen' : '🌫️ Nebel'}`;
 
       marker.position.y = 9 + Math.sin(elapsed * 3) * 1.4;
       marker.rotation.y += delta * 2;
@@ -496,36 +574,39 @@
         flame.scale.y = 0.8 + Math.sin(elapsed * 6 + index) * 0.22;
       });
 
-      if (!completed) {
+      if (!gameState.completed) {
         if (distance < 16 && !extinguishing) {
-          document.querySelector("#hint").textContent =
-            "Einsatzort erreicht! Halte E gedrückt, um das Feuer zu löschen.";
+          document.querySelector("#hint").textContent = "Einsatzort erreicht! Halte E gedrückt, um zu löschen.";
         } else if (distance >= 16) {
-          document.querySelector("#hint").textContent =
-            "Fahre zur orangefarbenen Einsatzmarkierung.";
+          document.querySelector("#hint").textContent = "Fahre zum Einsatzort!";
         }
       }
 
       if (extinguishing && distance < 16) {
-        document.querySelector("#hint").textContent =
-          "Löscharbeiten laufen ...";
-
+        document.querySelector("#hint").textContent = "Löscharbeiten laufen...";
         fireGroup.scale.multiplyScalar(1 - delta * 0.25);
 
         if (fireGroup.scale.x < 0.08) {
-          completed = true;
+          gameState.completed = true;
           fireGroup.visible = false;
           marker.visible = false;
           waterJet.visible = false;
 
-          credits += 250;
-          xp += 100;
+          const rewards = { easy: 150, normal: 250, hard: 400 };
+          const reward = rewards[gameState.difficulty] || 250;
+          
+          credits += reward;
+          xp += Math.floor(reward * 0.6);
+          completedMissions += 1;
 
-          localStorage.setItem("nordhafenCredits", credits);
-          localStorage.setItem("nordhafenXP", xp);
+          localStorage.setItem("gameCredits", credits);
+          localStorage.setItem("gameXP", xp);
+          localStorage.setItem("completedMissions", completedMissions);
 
           document.querySelector("#credits").textContent = credits;
           document.querySelector("#xp").textContent = xp;
+          document.querySelector("#successMessage").textContent = `${missions[gameState.mission].name} erfolgreich abgeschlossen!`;
+          document.querySelector("#successReward").textContent = `+${reward} Credits · +${Math.floor(reward * 0.6)} Erfahrung`;
           document.querySelector("#success").style.display = "flex";
         }
       }
@@ -538,7 +619,7 @@
       const elapsed = clock.elapsedTime;
 
       updateTruck(delta);
-      updateMission(delta, elapsed);
+      if (gameState.started) updateMission(delta, elapsed);
 
       const cameraTarget = truck.position.clone().add(
         new THREE.Vector3(0, 9, -16).applyAxisAngle(
@@ -554,6 +635,10 @@
     }
 
     animate();
+
+    document.querySelector("#credits").textContent = credits;
+    document.querySelector("#xp").textContent = xp;
+    showMainMenu();
 
     window.addEventListener("resize", () => {
       camera.aspect = window.innerWidth / window.innerHeight;
