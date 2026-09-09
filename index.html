@@ -3,331 +3,295 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Einsatzkommando 112 - Advanced</title>
+  <title>Urban Life Simulator 3D - GTA Style</title>
   <style>
-    :root {
-      --navy: #071725;
-      --panel: rgba(6, 25, 43, 0.9);
-      --blue: #63c8ff;
-      --orange: #ffad3d;
-      --red: #e43e3e;
-      --green: #2ecc71;
-    }
-
-    * { box-sizing: border-box; }
-
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    
     body {
-      margin: 0;
       overflow: hidden;
-      background: #091826;
+      background: #000;
       color: white;
-      font-family: Arial, Helvetica, sans-serif;
+      font-family: 'Arial', sans-serif;
     }
 
     canvas { display: block; }
 
-    #hud {
+    #ui {
       position: fixed;
-      inset: 0;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
       pointer-events: none;
-      padding: 16px;
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      z-index: 2;
+      z-index: 100;
     }
 
-    .panel {
-      max-width: 360px;
-      background: var(--panel);
-      border: 1px solid rgba(99, 200, 255, 0.55);
-      border-radius: 14px;
-      padding: 14px 16px;
-      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.3);
-    }
-
-    h1 {
-      color: var(--blue);
-      font-size: 17px;
-      margin: 0 0 9px;
-    }
-
-    p {
-      margin: 6px 0;
+    .hud {
+      position: fixed;
+      background: rgba(0, 0, 0, 0.7);
+      border: 2px solid #63c8ff;
+      border-radius: 8px;
+      padding: 12px 16px;
       font-size: 14px;
+      backdrop-filter: blur(5px);
     }
 
-    .orange { color: var(--orange); font-weight: bold; }
-    .red { color: #ff7474; font-weight: bold; }
-    .blue { color: var(--blue); font-weight: bold; }
-    .green { color: var(--green); font-weight: bold; }
+    #topLeft { top: 20px; left: 20px; max-width: 300px; }
+    #topRight { top: 20px; right: 20px; max-width: 300px; text-align: right; }
+    #bottomLeft { bottom: 20px; left: 20px; max-width: 250px; }
+    #bottomRight { bottom: 20px; right: 20px; max-width: 200px; text-align: right; }
+
+    .hud-title { color: #63c8ff; font-weight: bold; margin-bottom: 8px; text-transform: uppercase; }
+    .hud-item { margin: 4px 0; color: #aaa; }
+    .hud-value { color: #00ff00; font-weight: bold; }
 
     #hint {
       position: fixed;
-      z-index: 3;
-      bottom: 22px;
+      bottom: 50px;
       left: 50%;
       transform: translateX(-50%);
-      max-width: calc(100vw - 30px);
-      padding: 11px 18px;
-      border-radius: 12px;
-      background: rgba(0, 0, 0, 0.72);
+      background: rgba(0, 0, 0, 0.9);
+      border: 2px solid #ffad3d;
+      padding: 12px 20px;
+      border-radius: 8px;
+      max-width: 90vw;
       text-align: center;
-      font-size: 14px;
+      pointer-events: all;
     }
 
-    .overlay {
+    .menu-overlay {
       position: fixed;
-      z-index: 10;
       inset: 0;
-      display: flex;
+      background: rgba(0, 0, 0, 0.95);
+      display: none;
       align-items: center;
       justify-content: center;
-      padding: 18px;
-      background: rgba(1, 8, 17, 0.75);
+      z-index: 200;
+      pointer-events: all;
     }
 
-    .card {
-      width: min(520px, 100%);
-      text-align: center;
+    .menu-overlay.active {
+      display: flex;
+    }
+
+    .menu-card {
+      background: linear-gradient(145deg, #0a2540, #051a2e);
+      border: 2px solid #398ac3;
+      border-radius: 12px;
       padding: 30px;
-      border: 1px solid #398ac3;
-      border-radius: 20px;
-      background: linear-gradient(145deg, #0c2d4c, #06121f);
-      box-shadow: 0 20px 65px rgba(0, 0, 0, 0.65);
+      text-align: center;
+      max-width: 600px;
+      width: 90vw;
+      box-shadow: 0 0 40px rgba(57, 138, 195, 0.4);
     }
 
-    .card h2 {
-      color: #80d0ff;
-      margin-top: 0;
-    }
+    .menu-card h1 { font-size: 32px; margin-bottom: 20px; color: #80d0ff; text-transform: uppercase; }
+    .menu-card h2 { font-size: 24px; margin-bottom: 15px; color: #80d0ff; }
+    .menu-card p { margin: 8px 0; color: #ccc; }
 
-    button {
-      padding: 13px 22px;
-      margin-top: 15px;
-      margin-right: 8px;
-      border: 0;
-      border-radius: 10px;
-      cursor: pointer;
-      color: white;
-      background: var(--red);
-      font-size: 16px;
-      font-weight: bold;
-    }
-
-    button:hover { background: #f45252; }
-    button.secondary { background: #398ac3; }
-    button.secondary:hover { background: #4fa3d1; }
-
-    #success { display: none; }
-    #mainMenu { display: none; }
-    #missionSelect { display: none; }
-    #difficultySelect { display: none; }
-    #vehicleSelect { display: none; }
-
-    .grid {
+    .menu-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 10px;
-      margin-top: 15px;
+      margin: 20px 0;
     }
 
-    @media (max-width: 650px) {
-      #hud {
-        padding: 10px;
-        gap: 8px;
-      }
+    .menu-btn {
+      padding: 12px;
+      background: #c71f2a;
+      border: 1px solid #ff4444;
+      border-radius: 6px;
+      color: white;
+      cursor: pointer;
+      font-weight: bold;
+      transition: all 0.3s;
+      pointer-events: all;
+    }
 
-      .panel {
-        padding: 10px;
-        font-size: 12px;
-      }
+    .menu-btn:hover {
+      background: #ff4444;
+      transform: scale(1.05);
+    }
 
-      .panel p { font-size: 12px; }
+    .menu-btn.secondary {
+      background: #398ac3;
+      border-color: #63c8ff;
+    }
 
-      #hud .panel:last-child {
-        text-align: right;
-      }
+    .menu-btn.secondary:hover {
+      background: #4fa3d1;
+    }
 
-      .grid {
-        grid-template-columns: 1fr;
-      }
+    .minimap {
+      position: fixed;
+      bottom: 30px;
+      right: 30px;
+      width: 200px;
+      height: 200px;
+      background: rgba(0, 0, 0, 0.8);
+      border: 2px solid #63c8ff;
+      border-radius: 6px;
+      z-index: 50;
+    }
+
+    .radar-dot {
+      position: absolute;
+      border-radius: 50%;
+    }
+
+    .mission-marker {
+      position: absolute;
+      width: 10px;
+      height: 10px;
+      background: #ff9500;
+      border: 2px solid #ffad3d;
+      border-radius: 50%;
+    }
+
+    .player-dot {
+      position: absolute;
+      width: 8px;
+      height: 8px;
+      background: #63c8ff;
+      border-radius: 50%;
     }
   </style>
 </head>
 
 <body>
-  <div id="mainMenu" class="overlay">
-    <div class="card">
-      <h2>🚒 EINSATZKOMMANDO 112</h2>
-      <p>Willkommen zur erweiterten Version!</p>
-      <p>Übernimm Einsätze als Feuerwehr, Rettung oder Polizei.</p>
-      <button onclick="showMissionSelect()">EINSATZ STARTEN</button>
-      <button class="secondary" onclick="showStatistics()">STATISTIKEN</button>
+  <div id="ui">
+    <div id="topLeft" class="hud">
+      <div class="hud-title" id="charName">Michael</div>
+      <div class="hud-item">💰 Geld: <span class="hud-value" id="money">$0</span></div>
+      <div class="hud-item">❤️ Gesundheit: <span class="hud-value" id="health">100%</span></div>
+      <div class="hud-item">🎯 Mission: <span id="mission">Keine</span></div>
     </div>
+
+    <div id="topRight" class="hud">
+      <div class="hud-item">📍 Position: <span class="hud-value" id="position">0, 0</span></div>
+      <div class="hud-item">🚗 Fahrzeug: <span class="hud-value" id="vehicle">Zu Fuß</span></div>
+      <div class="hud-item">⭐ Level: <span class="hud-value" id="level">1</span></div>
+      <div class="hud-item">🚓 Fahndung: <span class="hud-value" id="wanted">●</span></div>
+    </div>
+
+    <div id="bottomLeft" class="hud">
+      <div class="hud-title">KONTROLLEN</div>
+      <div class="hud-item" style="font-size: 12px;">W/A/S/D = Bewegen</div>
+      <div class="hud-item" style="font-size: 12px;">SPACE = Springen</div>
+      <div class="hud-item" style="font-size: 12px;">E = Interagieren</div>
+      <div class="hud-item" style="font-size: 12px;">F = Fahrzeug</div>
+      <div class="hud-item" style="font-size: 12px;">C = Charakter wechseln</div>
+      <div class="hud-item" style="font-size: 12px;">M = Missionen</div>
+    </div>
+
+    <div id="bottomRight" class="hud">
+      <div class="hud-title">⏰ ZEIT</div>
+      <div class="hud-value" id="gameTime">12:00</div>
+    </div>
+
+    <div id="hint">Willkommen in Urban Life Simulator! Drücke M für Missionen oder E in der Nähe von Objekten.</div>
+
+    <canvas id="minimap" class="minimap"></canvas>
   </div>
 
-  <div id="missionSelect" class="overlay">
-    <div class="card">
-      <h2>🗺️ EINSATZORT WÄHLEN</h2>
-      <div class="grid">
-        <button onclick="selectMission(0)">🔥 Gebäudebrand<br>Hafenstraße</button>
-        <button onclick="selectMission(1)">🚗 Autounfall<br>Hauptstraße</button>
-        <button onclick="selectMission(2)">🌊 Person im Wasser<br>Hafen</button>
-        <button onclick="selectMission(3)">💣 Chemieunfall<br>Industriegebiet</button>
+  <!-- Menus -->
+  <div id="mainMenu" class="menu-overlay active">
+    <div class="menu-card">
+      <h1>🎮 URBAN LIFE SIMULATOR</h1>
+      <p>Eine offene 3D-Welt voller Abenteuer</p>
+      <div style="margin: 20px 0;">
+        <button class="menu-btn" onclick="startGame()">▶️ SPIEL STARTEN</button>
+        <button class="menu-btn secondary" onclick="showMissions()">📋 MISSIONEN</button>
       </div>
-      <button class="secondary" onclick="showMainMenu()">ZURÜCK</button>
     </div>
   </div>
 
-  <div id="difficultySelect" class="overlay">
-    <div class="card">
-      <h2>⚙️ SCHWIERIGKEITSGRAD</h2>
-      <div class="grid">
-        <button onclick="selectDifficulty('easy')" style="background: #2ecc71;">⭐ EINFACH</button>
-        <button onclick="selectDifficulty('normal')" style="background: #f39c12;">⭐⭐ NORMAL</button>
-        <button onclick="selectDifficulty('hard')" style="background: #e74c3c;">⭐⭐⭐ SCHWER</button>
+  <div id="charSelectMenu" class="menu-overlay">
+    <div class="menu-card">
+      <h2>🎭 CHARAKTER WÄHLEN</h2>
+      <div class="menu-grid">
+        <button class="menu-btn" onclick="switchCharacter('michael')">🧑 Michael<br><small>Vermögen: $100K</small></button>
+        <button class="menu-btn" onclick="switchCharacter('franklin')">🧑 Franklin<br><small>Vermögen: $50K</small></button>
+        <button class="menu-btn" onclick="switchCharacter('trevor')">🧑 Trevor<br><small>Vermögen: $25K</small></button>
       </div>
-      <button class="secondary" onclick="showMissionSelect()">ZURÜCK</button>
+      <button class="menu-btn secondary" style="width: 100%;" onclick="hideMenu('charSelectMenu')">← ZURÜCK</button>
     </div>
   </div>
 
-  <div id="vehicleSelect" class="overlay">
-    <div class="card">
-      <h2>🚙 FAHRZEUG WÄHLEN</h2>
-      <div class="grid">
-        <button onclick="selectVehicle('fire')" style="background: #c71f2a;">🚒 Feuerwehr</button>
-        <button onclick="selectVehicle('ambulance')" style="background: #ffffff; color: #333;">🚑 Rettung</button>
-        <button onclick="selectVehicle('police')" style="background: #0051ba;">🚔 Polizei</button>
+  <div id="missionsMenu" class="menu-overlay">
+    <div class="menu-card">
+      <h2>📋 VERFÜGBARE MISSIONEN</h2>
+      <div id="missionsList" style="text-align: left; max-height: 400px; overflow-y: auto; margin: 15px 0; padding: 10px; background: rgba(0, 0, 0, 0.5); border-radius: 6px;">
       </div>
-      <button class="secondary" onclick="showDifficultySelect()">ZURÜCK</button>
+      <button class="menu-btn secondary" style="width: 100%; margin-top: 10px;" onclick="hideMenu('missionsMenu')">← ZURÜCK</button>
     </div>
   </div>
-
-  <div id="success" class="overlay">
-    <div class="card">
-      <h2>✅ EINSATZ ERFOLGREICH!</h2>
-      <p id="successMessage">Der Einsatz wurde erfolgreich abgeschlossen.</p>
-      <p class="green" id="successReward">+250 Credits · +100 Erfahrung</p>
-      <button onclick="showMissionSelect()">NÄCHSTER EINSATZ</button>
-      <button class="secondary" onclick="showMainMenu()">HAUPTMENÜ</button>
-    </div>
-  </div>
-
-  <div id="hud">
-    <div class="panel">
-      <h1 id="hudTitle">LEITSTELLE</h1>
-      <p id="hudMission">Einsatz: --</p>
-      <p id="distance">Entfernung: -- m</p>
-      <p id="vehicleStatus">Blaulicht: AUS · Sirene: AUS</p>
-      <p id="weatherInfo">Wetter: Sonnig</p>
-    </div>
-
-    <div class="panel">
-      <p>💰 Credits: <b id="credits">0</b></p>
-      <p>⭐ Erfahrung: <b id="xp">0</b></p>
-      <p>🚒 Tempo: <b id="speed">0</b> km/h</p>
-      <p>🌙 Zeit: <b id="timeOfDay">Tag</b></p>
-    </div>
-  </div>
-
-  <div id="hint">Drücke „Einsatz starten".</div>
 
   <script type="module">
     import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js";
 
-    // Game State
+    // ============ GAME STATE ============
     const gameState = {
-      started: false,
-      mission: 0,
-      difficulty: 'normal',
-      vehicle: 'fire',
-      completed: false,
-      timeOfDay: 0,
-      weather: 'sunny'
+      currentChar: 'michael',
+      money: { michael: 100000, franklin: 50000, trevor: 25000 },
+      health: 100,
+      level: 1,
+      wanted: 0,
+      inVehicle: false,
+      currentVehicle: null,
+      time: 12,
+      isRunning: false,
+      position: new THREE.Vector3(0, 0, 0)
     };
 
-    // Mission Configs
+    const characters = {
+      michael: { name: 'Michael', position: new THREE.Vector3(-50, 0, -50), color: 0x00ff00 },
+      franklin: { name: 'Franklin', position: new THREE.Vector3(0, 0, 0), color: 0xff9900 },
+      trevor: { name: 'Trevor', position: new THREE.Vector3(100, 0, 100), color: 0xff0000 }
+    };
+
     const missions = [
-      { name: 'Gebäudebrand', location: 'Hafenstraße', target: new THREE.Vector3(94, 0, 36), type: 'fire', time: 120 },
-      { name: 'Autounfall', location: 'Hauptstraße', target: new THREE.Vector3(34, 0, -40), type: 'crash', time: 90 },
-      { name: 'Person im Wasser', location: 'Hafen', target: new THREE.Vector3(-140, 0, 20), type: 'rescue', time: 150 },
-      { name: 'Chemieunfall', location: 'Industriegebiet', target: new THREE.Vector3(120, 0, 100), type: 'hazmat', time: 180 }
+      { id: 1, name: 'Flucht!', desc: 'Entkommen Sie der Polizei', reward: 5000, type: 'chase' },
+      { id: 2, name: 'Bankraub', desc: 'Überfall auf die Bank', reward: 50000, type: 'heist' },
+      { id: 3, name: 'Autodiebstahl', desc: 'Stehlen Sie ein Auto', reward: 2000, type: 'steal' },
+      { id: 4, name: 'Taxifahrer', desc: 'Fahren Sie Personen herum', reward: 1000, type: 'taxi' },
+      { id: 5, name: 'Rennen', desc: 'Gewinnen Sie ein illegales Rennen', reward: 3000, type: 'race' }
     ];
 
-    // Persisted Data
-    let credits = Number(localStorage.getItem("gameCredits") || 0);
-    let xp = Number(localStorage.getItem("gameXP") || 0);
-    let completedMissions = Number(localStorage.getItem("completedMissions") || 0);
-
-    // Scene Setup
+    // ============ THREE.JS SCENE ============
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x91cae7);
-    scene.fog = new THREE.Fog(0x91cae7, 80, 290);
+    scene.background = new THREE.Color(0x87ceeb);
+    scene.fog = new THREE.Fog(0x87ceeb, 300, 800);
 
-    const camera = new THREE.PerspectiveCamera(65, window.innerWidth / window.innerHeight, 0.1, 1000);
-    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 2000);
+    camera.position.set(0, 10, 15);
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true, precision: 'highp' });
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.shadowMap.enabled = true;
     document.body.appendChild(renderer.domElement);
 
-    const clock = new THREE.Clock();
-    const keys = {};
-    let speed = 0, steering = 0, blueLights = false, siren = false, extinguishing = false;
+    // ============ LIGHTING ============
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+    scene.add(ambientLight);
 
-    // UI Functions
-    function showMainMenu() {
-      document.querySelector("#mainMenu").style.display = "flex";
-      document.querySelector("#missionSelect").style.display = "none";
-      document.querySelector("#difficultySelect").style.display = "none";
-      document.querySelector("#vehicleSelect").style.display = "none";
-    }
+    const sun = new THREE.DirectionalLight(0xfff0c9, 2);
+    sun.position.set(200, 200, 100);
+    sun.castShadow = true;
+    sun.shadow.mapSize.width = 4096;
+    sun.shadow.mapSize.height = 4096;
+    sun.shadow.camera.left = -400;
+    sun.shadow.camera.right = 400;
+    sun.shadow.camera.top = 400;
+    sun.shadow.camera.bottom = -400;
+    scene.add(sun);
 
-    function showMissionSelect() {
-      document.querySelector("#mainMenu").style.display = "none";
-      document.querySelector("#missionSelect").style.display = "flex";
-    }
-
-    function selectMission(id) {
-      gameState.mission = id;
-      document.querySelector("#missionSelect").style.display = "none";
-      document.querySelector("#difficultySelect").style.display = "flex";
-    }
-
-    function showDifficultySelect() {
-      document.querySelector("#difficultySelect").style.display = "flex";
-    }
-
-    function selectDifficulty(diff) {
-      gameState.difficulty = diff;
-      document.querySelector("#difficultySelect").style.display = "none";
-      document.querySelector("#vehicleSelect").style.display = "flex";
-    }
-
-    function selectVehicle(veh) {
-      gameState.vehicle = veh;
-      startGame();
-    }
-
-    function showStatistics() {
-      alert(`📊 STATISTIKEN\n\nCredits: ${credits}\nErfahrung: ${xp}\nAbgeschlossene Einsätze: ${completedMissions}`);
-    }
-
-    window.showMainMenu = showMainMenu;
-    window.showMissionSelect = showMissionSelect;
-    window.selectMission = selectMission;
-    window.selectDifficulty = selectDifficulty;
-    window.selectVehicle = selectVehicle;
-    window.showStatistics = showStatistics;
-    window.showDifficultySelect = showDifficultySelect;
-
-    // Create World
-    function createBox(width, height, depth, color, x, y, z) {
-      const mesh = new THREE.Mesh(
-        new THREE.BoxGeometry(width, height, depth),
-        new THREE.MeshStandardMaterial({ color, roughness: 0.7 })
-      );
+    // ============ WORLD CREATION ============
+    function createBox(w, h, d, color, x, y, z) {
+      const geometry = new THREE.BoxGeometry(w, h, d);
+      const material = new THREE.MeshStandardMaterial({ color, roughness: 0.5 });
+      const mesh = new THREE.Mesh(geometry, material);
       mesh.position.set(x, y, z);
       mesh.castShadow = true;
       mesh.receiveShadow = true;
@@ -335,312 +299,203 @@
       return mesh;
     }
 
-    // Lighting
-    scene.add(new THREE.HemisphereLight(0xdaf4ff, 0x416940, 2.3));
-    const sun = new THREE.DirectionalLight(0xfff0c9, 2.5);
-    sun.position.set(60, 100, 45);
-    sun.castShadow = true;
-    scene.add(sun);
-
     // Ground
-    createBox(420, 1, 420, 0x51934d, 0, -0.5, 0);
-    const water = createBox(125, 0.2, 420, 0x288caf, -145, -0.15, 0);
-    water.material.roughness = 0.15;
-    water.material.metalness = 0.25;
+    createBox(1000, 2, 1000, 0x2d5016, 0, -1, 0);
 
-    // Roads
-    const roadColor = 0x30363d;
-    createBox(315, 0.12, 18, roadColor, 34, 0.06, 0);
-    createBox(18, 0.12, 270, roadColor, 34, 0.06, 0);
-    createBox(190, 0.12, 15, roadColor, 35, 0.06, 68);
+    // Buildings - Los Santos Area
+    createBox(60, 40, 60, 0xd4a574, -100, 20, -100);
+    createBox(50, 35, 50, 0xb8c5d6, 0, 17.5, -100);
+    createBox(55, 38, 55, 0xc9a876, 100, 19, -100);
+    createBox(45, 30, 45, 0xd9cfc3, -50, 15, 0);
+    createBox(70, 50, 70, 0xb9a89c, 50, 25, 50);
 
-    // Road markings
-    for (let x = -105; x < 180; x += 14) {
-      createBox(7, 0.03, 0.35, 0xf4dc78, x, 0.14, 0);
+    // Streets
+    createBox(300, 0.2, 30, 0x2a2a2a, 0, 0.1, -80);
+    createBox(30, 0.2, 300, 0x2a2a2a, -80, 0.1, 0);
+    createBox(300, 0.2, 30, 0x2a2a2a, 0, 0.1, 80);
+
+    // Blaine County - Desert Area
+    createBox(80, 35, 80, 0xc4a76a, 200, 17.5, 150);
+    createBox(60, 25, 60, 0xb5956a, 300, 12.5, 200);
+    createBox(100, 45, 100, 0x8b7355, 400, 22.5, 350);
+
+    // ============ PLAYER/CHARACTER ============
+    const player = new THREE.Group();
+    scene.add(player);
+
+    function createCharacterMesh(color) {
+      const group = new THREE.Group();
+      
+      // Body
+      const body = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.4, 0.4, 1.8, 8),
+        new THREE.MeshStandardMaterial({ color, roughness: 0.5 })
+      );
+      body.position.y = 0.9;
+      body.castShadow = true;
+      group.add(body);
+
+      // Head
+      const head = new THREE.Mesh(
+        new THREE.SphereGeometry(0.35, 8, 8),
+        new THREE.MeshStandardMaterial({ color, roughness: 0.5 })
+      );
+      head.position.y = 2.2;
+      head.castShadow = true;
+      group.add(head);
+
+      return group;
     }
-    for (let z = -120; z < 130; z += 14) {
-      createBox(0.35, 0.03, 7, 0xf4dc78, 34, 0.14, z);
-    }
 
-    // Buildings
-    function createBuilding(x, z, width, depth, height, color) {
-      createBox(width, height, depth, color, x, height / 2, z);
-      createBox(width + 0.5, 0.5, depth + 0.5, 0x3a4650, x, height + 0.25, z);
-      for (let i = -width / 2 + 2; i < width / 2; i += 4) {
-        createBox(1.2, 1.3, 0.08, 0xa9dce9, x + i, height * 0.58, z - depth / 2 - 0.05);
-      }
-    }
+    const charMesh = createCharacterMesh(0x00ff00);
+    player.add(charMesh);
+    player.position.copy(characters.michael.position);
 
-    createBuilding(14, -34, 25, 22, 18, 0xe2d0b4);
-    createBuilding(78, -35, 31, 25, 25, 0xc5d3dc);
-    createBuilding(94, 36, 30, 25, 22, 0xd9b4a0);
-    createBuilding(-3, 74, 29, 20, 18, 0xe3d9c9);
-    createBuilding(93, 92, 38, 30, 29, 0xbda6a2);
-    createBuilding(11, 118, 24, 23, 16, 0xd4e1df);
-    createBuilding(4, -84, 46, 32, 15, 0xb82f31);
+    // ============ INPUT ============
+    const keys = {};
+    window.addEventListener('keydown', (e) => {
+      keys[e.key.toLowerCase()] = true;
+      
+      if (e.key.toLowerCase() === 'e') interactNearby();
+      if (e.key.toLowerCase() === 'c') showMenu('charSelectMenu');
+      if (e.key.toLowerCase() === 'm') showMenu('missionsMenu');
+      if (e.key.toLowerCase() === 'f') enterVehicle();
+    });
 
-    // Vehicle Group
-    const truck = new THREE.Group();
-    scene.add(truck);
+    window.addEventListener('keyup', (e) => {
+      keys[e.key.toLowerCase()] = false;
+    });
 
-    const vehicleColors = {
-      fire: 0xc71f2a,
-      ambulance: 0xf2f2f2,
-      police: 0x0051ba
+    // ============ GAME FUNCTIONS ============
+    window.startGame = function() {
+      hideMenu('mainMenu');
+      gameState.isRunning = true;
+      updateHUD();
     };
 
-    const redMaterial = new THREE.MeshStandardMaterial({ color: vehicleColors.fire, roughness: 0.45 });
-    const whiteMaterial = new THREE.MeshStandardMaterial({ color: 0xf2f2f2 });
+    window.showMenu = function(id) {
+      document.getElementById(id).classList.add('active');
+    };
 
-    function truckBox(w, h, d, material, x, y, z) {
-      const mesh = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), material);
-      mesh.position.set(x, y, z);
-      mesh.castShadow = true;
-      mesh.receiveShadow = true;
-      truck.add(mesh);
-      return mesh;
-    }
+    window.hideMenu = function(id) {
+      document.getElementById(id).classList.remove('active');
+    };
 
-    truckBox(4.1, 2.1, 8, redMaterial, 0, 1.7, 0);
-    truckBox(4.05, 2.1, 2.8, whiteMaterial, 0, 3.15, -2.25);
-    truckBox(3.3, 1.1, 0.08, new THREE.MeshStandardMaterial({ color: 0x244f61 }), 0, 3.25, -3.68);
+    window.showMissions = function() {
+      const list = document.getElementById('missionsList');
+      list.innerHTML = missions.map(m => `
+        <div style="padding: 10px; background: rgba(99, 200, 255, 0.1); margin: 5px 0; border-radius: 4px; cursor: pointer;">
+          <strong>${m.name}</strong> - ${m.desc}<br>
+          <span style="color: #00ff00;">Belohnung: $${m.reward}</span>
+        </div>
+      `).join('');
+      showMenu('missionsMenu');
+    };
 
-    const wheels = [];
-    for (const x of [-2.15, 2.15]) {
-      for (const z of [-2.5, 2.55]) {
-        const wheel = new THREE.Mesh(
-          new THREE.CylinderGeometry(0.75, 0.75, 0.5, 16),
-          new THREE.MeshStandardMaterial({ color: 0x151515 })
-        );
-        wheel.rotation.z = Math.PI / 2;
-        wheel.position.set(x, 0.78, z);
-        wheel.castShadow = true;
-        truck.add(wheel);
-        wheels.push(wheel);
-      }
-    }
-
-    const beaconMaterial = new THREE.MeshStandardMaterial({
-      color: 0x057aff,
-      emissive: 0x0055ff,
-      emissiveIntensity: 0
-    });
-
-    for (const x of [-1.15, 1.15]) {
-      truckBox(0.8, 0.28, 0.55, beaconMaterial, x, 4.35, -0.2);
-    }
-
-    truck.position.set(4, 0, -68);
-
-    // Fire Effect
-    const fireGroup = new THREE.Group();
-    const fireMaterial = new THREE.MeshStandardMaterial({
-      color: 0xff4b08,
-      emissive: 0xff2200,
-      emissiveIntensity: 2.2
-    });
-
-    function addFire(x, y, z) {
-      for (let i = 0; i < 14; i++) {
-        const flame = new THREE.Mesh(
-          new THREE.ConeGeometry(0.7 + Math.random() * 0.8, 2 + Math.random() * 3, 6),
-          fireMaterial
-        );
-        flame.position.set(
-          (Math.random() - 0.5) * 7,
-          1.4,
-          (Math.random() - 0.5) * 6
-        );
-        fireGroup.add(flame);
-      }
-    }
-
-    // Mission Marker
-    const marker = new THREE.Mesh(
-      new THREE.CylinderGeometry(1.8, 1.8, 0.2, 32),
-      new THREE.MeshBasicMaterial({ color: 0xff9500, transparent: true, opacity: 0.85 })
-    );
-    scene.add(marker);
-
-    // Water Jet
-    const waterJet = new THREE.Line(
-      new THREE.BufferGeometry().setFromPoints([
-        new THREE.Vector3(0, 2.3, 3),
-        new THREE.Vector3(0, 2.5, 20)
-      ]),
-      new THREE.LineBasicMaterial({ color: 0x7ae7ff })
-    );
-    waterJet.visible = false;
-    truck.add(waterJet);
-
-    // Input
-    window.addEventListener("keydown", (event) => {
-      const key = event.key.toLowerCase();
-      keys[key] = true;
-      if (key === "f") blueLights = !blueLights;
-      if (key === "h") siren = !siren;
-      if (key === "r") truck.position.set(4, 0, -68);
-      if (key === "e" && !gameState.completed) {
-        const distance = truck.position.distanceTo(missions[gameState.mission].target);
-        if (distance < 16) {
-          extinguishing = true;
-          waterJet.visible = true;
-        }
-      }
-    });
-
-    window.addEventListener("keyup", (event) => {
-      const key = event.key.toLowerCase();
-      keys[key] = false;
-      if (key === "e") {
-        extinguishing = false;
-        waterJet.visible = false;
-      }
-    });
-
-    function startGame() {
-      gameState.started = true;
-      gameState.completed = false;
-      gameState.timeOfDay = Math.random() * 0.5;
-      gameState.weather = ['sunny', 'rainy', 'foggy'][Math.floor(Math.random() * 3)];
-      
-      fireGroup.clear();
-      addFire(0, 0, 0);
-      fireGroup.position.copy(missions[gameState.mission].target);
-      scene.add(fireGroup);
-
-      marker.position.copy(missions[gameState.mission].target);
-      marker.position.y = 10;
-
-      document.querySelector("#mainMenu").style.display = "none";
-      document.querySelector("#success").style.display = "none";
-      document.querySelector("#hint").textContent = "Fahre zum Einsatzort!";
-      document.querySelector("#hudTitle").textContent = missions[gameState.mission].name.toUpperCase();
-      document.querySelector("#hudMission").textContent = `Einsatz: ${missions[gameState.mission].location}`;
-    }
-
-    function updateTruck(delta) {
-      if (!gameState.started || gameState.completed) return;
-
-      if (keys.w) speed += 18 * delta;
-      if (keys.s) speed -= 22 * delta;
-
-      speed *= Math.pow(0.985, delta * 60);
-      speed = THREE.MathUtils.clamp(speed, -9, 25);
-
-      if (Math.abs(speed) > 0.2) {
-        if (keys.a) steering += 1.8 * delta;
-        if (keys.d) steering -= 1.8 * delta;
-      }
-
-      steering *= Math.pow(0.82, delta * 60);
-
-      truck.rotation.y += steering * speed * 0.018 * delta;
-      truck.translateZ(speed * delta);
-
-      truck.position.x = THREE.MathUtils.clamp(truck.position.x, -110, 175);
-      truck.position.z = THREE.MathUtils.clamp(truck.position.z, -130, 140);
-
-      wheels.forEach((wheel) => {
-        wheel.rotation.x -= speed * delta * 1.8;
+    window.switchCharacter = function(char) {
+      gameState.currentChar = char;
+      player.position.copy(characters[char].position);
+      charMesh.children.forEach(child => {
+        if (child.material) child.material.color.setHex(characters[char].color);
       });
+      hideMenu('charSelectMenu');
+      updateHUD();
+    };
 
-      beaconMaterial.emissiveIntensity = blueLights && Math.sin(performance.now() * 0.02) > 0 ? 7 : 0;
-
-      document.querySelector("#speed").textContent = Math.round(Math.abs(speed) * 4);
-      document.querySelector("#vehicleStatus").innerHTML =
-        `Blaulicht: <b class="${blueLights ? "blue" : ""}">${blueLights ? "AN" : "AUS"}</b> · Sirene: <b class="${siren ? "red" : ""}">${siren ? "AN" : "AUS"}</b>`;
+    function interactNearby() {
+      document.getElementById('hint').textContent = 'Interaktion durchgeführt!';
     }
 
-    function updateMission(delta, elapsed) {
-      const distance = truck.position.distanceTo(missions[gameState.mission].target);
+    function enterVehicle() {
+      gameState.inVehicle = !gameState.inVehicle;
+      document.getElementById('hint').textContent = gameState.inVehicle ? 'Sie sind im Fahrzeug' : 'Sie sind ausgestiegen';
+    }
 
-      document.querySelector("#distance").textContent = `Entfernung: ${Math.round(distance)} m`;
+    function updateHUD() {
+      document.getElementById('charName').textContent = characters[gameState.currentChar].name;
+      document.getElementById('money').textContent = `$${gameState.money[gameState.currentChar].toLocaleString()}`;
+      document.getElementById('health').textContent = gameState.health + '%';
+      document.getElementById('wanted').textContent = '●'.repeat(gameState.wanted);
+      document.getElementById('position').textContent = `${player.position.x.toFixed(0)}, ${player.position.z.toFixed(0)}`;
+      document.getElementById('vehicle').textContent = gameState.inVehicle ? 'Auto' : 'Zu Fuß';
+      document.getElementById('gameTime').textContent = `${String(gameState.time).padStart(2, '0')}:00`;
+    }
 
-      // Update time of day
-      gameState.timeOfDay += delta * 0.05;
-      if (gameState.timeOfDay > 1) gameState.timeOfDay = 0;
+    // ============ MINIMAP ============
+    const minimapCanvas = document.getElementById('minimap');
+    const minimapCtx = minimapCanvas.getContext('2d');
+
+    function updateMinimap() {
+      minimapCtx.fillStyle = '#1a1a2e';
+      minimapCtx.fillRect(0, 0, 200, 200);
+
+      minimapCtx.strokeStyle = '#63c8ff';
+      minimapCtx.lineWidth = 2;
+      minimapCtx.strokeRect(0, 0, 200, 200);
+
+      const scale = 0.3;
+      const offsetX = 100;
+      const offsetY = 100;
+
+      // Player
+      const playerX = (player.position.x * scale) + offsetX;
+      const playerY = (player.position.z * scale) + offsetY;
       
-      const isDaytime = gameState.timeOfDay < 0.7;
-      document.querySelector("#timeOfDay").textContent = isDaytime ? "Tag" : "Nacht";
+      minimapCtx.fillStyle = '#63c8ff';
+      minimapCtx.beginPath();
+      minimapCtx.arc(playerX, playerY, 4, 0, Math.PI * 2);
+      minimapCtx.fill();
 
-      // Weather display
-      document.querySelector("#weatherInfo").textContent = `Wetter: ${gameState.weather === 'sunny' ? '☀️ Sonnig' : gameState.weather === 'rainy' ? '🌧️ Regen' : '🌫️ Nebel'}`;
-
-      marker.position.y = 9 + Math.sin(elapsed * 3) * 1.4;
-      marker.rotation.y += delta * 2;
-
-      fireGroup.children.forEach((flame, index) => {
-        flame.scale.y = 0.8 + Math.sin(elapsed * 6 + index) * 0.22;
-      });
-
-      if (!gameState.completed) {
-        if (distance < 16 && !extinguishing) {
-          document.querySelector("#hint").textContent = "Einsatzort erreicht! Halte E gedrückt, um zu löschen.";
-        } else if (distance >= 16) {
-          document.querySelector("#hint").textContent = "Fahre zum Einsatzort!";
-        }
-      }
-
-      if (extinguishing && distance < 16) {
-        document.querySelector("#hint").textContent = "Löscharbeiten laufen...";
-        fireGroup.scale.multiplyScalar(1 - delta * 0.25);
-
-        if (fireGroup.scale.x < 0.08) {
-          gameState.completed = true;
-          fireGroup.visible = false;
-          marker.visible = false;
-          waterJet.visible = false;
-
-          const rewards = { easy: 150, normal: 250, hard: 400 };
-          const reward = rewards[gameState.difficulty] || 250;
-          
-          credits += reward;
-          xp += Math.floor(reward * 0.6);
-          completedMissions += 1;
-
-          localStorage.setItem("gameCredits", credits);
-          localStorage.setItem("gameXP", xp);
-          localStorage.setItem("completedMissions", completedMissions);
-
-          document.querySelector("#credits").textContent = credits;
-          document.querySelector("#xp").textContent = xp;
-          document.querySelector("#successMessage").textContent = `${missions[gameState.mission].name} erfolgreich abgeschlossen!`;
-          document.querySelector("#successReward").textContent = `+${reward} Credits · +${Math.floor(reward * 0.6)} Erfahrung`;
-          document.querySelector("#success").style.display = "flex";
-        }
-      }
+      // Direction indicator
+      minimapCtx.strokeStyle = '#63c8ff';
+      minimapCtx.beginPath();
+      minimapCtx.moveTo(playerX, playerY);
+      minimapCtx.lineTo(playerX, playerY - 8);
+      minimapCtx.stroke();
     }
+
+    // ============ ANIMATION LOOP ============
+    const clock = new THREE.Clock();
 
     function animate() {
       requestAnimationFrame(animate);
+      const delta = Math.min(clock.getDelta(), 0.016);
 
-      const delta = Math.min(clock.getDelta(), 0.05);
-      const elapsed = clock.elapsedTime;
+      if (gameState.isRunning) {
+        // Movement
+        const speed = 0.15;
+        if (keys['w']) player.position.z -= speed;
+        if (keys['s']) player.position.z += speed;
+        if (keys['a']) player.position.x -= speed;
+        if (keys['d']) player.position.x += speed;
 
-      updateTruck(delta);
-      if (gameState.started) updateMission(delta, elapsed);
+        // Boundary check
+        player.position.x = THREE.MathUtils.clamp(player.position.x, -400, 400);
+        player.position.z = THREE.MathUtils.clamp(player.position.z, -400, 400);
 
-      const cameraTarget = truck.position.clone().add(
-        new THREE.Vector3(0, 9, -16).applyAxisAngle(
-          new THREE.Vector3(0, 1, 0),
-          truck.rotation.y
-        )
-      );
+        // Camera follow
+        camera.position.lerp(new THREE.Vector3(
+          player.position.x + 5,
+          player.position.y + 8,
+          player.position.z + 12
+        ), 0.1);
+        camera.lookAt(player.position.x, player.position.y + 1, player.position.z);
 
-      camera.position.lerp(cameraTarget, 1 - Math.pow(0.001, delta));
-      camera.lookAt(truck.position.x, truck.position.y + 2, truck.position.z);
+        // Update time
+        gameState.time = (gameState.time + 0.001) % 24;
+
+        // Update HUD
+        updateHUD();
+        updateMinimap();
+      }
 
       renderer.render(scene, camera);
     }
 
     animate();
 
-    document.querySelector("#credits").textContent = credits;
-    document.querySelector("#xp").textContent = xp;
-    showMainMenu();
-
-    window.addEventListener("resize", () => {
+    // Handle resize
+    window.addEventListener('resize', () => {
       camera.aspect = window.innerWidth / window.innerHeight;
       camera.updateProjectionMatrix();
       renderer.setSize(window.innerWidth, window.innerHeight);
